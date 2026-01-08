@@ -7,7 +7,7 @@ import org.mapstruct.MappingTarget;
 import com.sifuturo.sigep.dominio.entidades.Empleado;
 import com.sifuturo.sigep.infraestructura.persistencia.jpa.EmpleadoEntity;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = { IPersonaMapper.class })
 public interface IEmpleadoMapper {
 
 	Empleado toDomain(EmpleadoEntity entity);
@@ -16,5 +16,4 @@ public interface IEmpleadoMapper {
 	EmpleadoEntity toEntity(Empleado empleado);
 
 	void updateEntityFromDomain(Empleado domain, @MappingTarget EmpleadoEntity entity);
-
 }

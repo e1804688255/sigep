@@ -2,7 +2,6 @@ package com.sifuturo.sigep.presentacion.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import com.sifuturo.sigep.dominio.entidades.Persona;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class EmpleadoDto {
 
 	private Long idEmpleado;
-	private Persona persona;
+	private PersonaDTO persona;
 	private String codigoEmpleado;
 	private String cargo;
 	private String departamento;

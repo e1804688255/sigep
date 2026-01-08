@@ -18,7 +18,6 @@ import com.sifuturo.sigep.dominio.entidades.Empleado;
 import com.sifuturo.sigep.presentacion.dto.EmpleadoDto;
 import com.sifuturo.sigep.presentacion.mapeadores.IEmpleadoDtoMapper;
 
-
 @RestController
 @RequestMapping("/api/empleado")
 @CrossOrigin(origins = "*") // Permite peticiones desde Angular/React local
@@ -26,22 +25,17 @@ public class EmpleadoController {
 
 	private final IEmpleadoUseCase useCase;
 	private final IEmpleadoDtoMapper mapper;
+
 	public EmpleadoController(IEmpleadoUseCase useCase, IEmpleadoDtoMapper mapper) {
 		this.useCase = useCase;
 		this.mapper = mapper;
 	}
-	
-/*	@PostMapping
+
+	@PostMapping
 	public ResponseEntity<EmpleadoDto> crear(@RequestBody EmpleadoDto empleadoDto) {
-	    System.out.println(">>> LLEGO AL CONTROLLER: " + empleadoDto.toString());
-
 	    Empleado empleadoDominio = mapper.toDomain(empleadoDto);
-	    
-	    System.out.println(">>> SE CONVIRTIO A DOMINIO: " + empleadoDominio.getPersona() + " - " + empleadoDominio.getIdEmpleado());
-
 	    Empleado empleadoGuardado = useCase.guardar(empleadoDominio);
+	    
 	    return new ResponseEntity<>(mapper.toDto(empleadoGuardado), HttpStatus.CREATED);
 	}
-
-	*/
 }

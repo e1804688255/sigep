@@ -55,4 +55,10 @@ public class PersonaRepositorioAdapter implements IPersonaRepositorio {
         // Ojo: Tu entity usa Long, pero la interfaz int. Hacemos casting.
         jpaRepository.deleteById((long) id);
     }
+    
+    @Override
+    public Optional<Persona> buscarPorId(Long id) {
+        return jpaRepository.findById(id)
+                .map(mapper::toDomain);
+    }
 }
