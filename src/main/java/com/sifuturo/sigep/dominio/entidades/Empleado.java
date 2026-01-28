@@ -15,8 +15,9 @@ public class Empleado extends EntidadBase {
 
 	private Long idEmpleado;
 	private Persona persona;
+	private Area area;
+	private Cargo cargo;
 	private String codigoEmpleado;
-	private String cargo;
 	private String departamento;
 	private String tipoContrato;
 	private String modalidadTrabajo;

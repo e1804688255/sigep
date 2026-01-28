@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+
 @Entity
 @Table(name = "empleados")
 @Data
@@ -23,14 +24,21 @@ public class EmpleadoEntity extends AuditoriaEntity {
 
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_persona", referencedColumnName = "id", nullable = false, unique = true)
-	
+
 	private PersonaEntity persona;
+
+	// Relación Muchos Empleados -> Una Área
+	@ManyToOne
+	@JoinColumn(name = "id_area")
+	private AreaEntity area;
+
+	// Relación Muchos Empleados -> Un Cargo
+	@ManyToOne
+	@JoinColumn(name = "id_cargo")
+	private CargoEntity cargo;
 
 	@Column(name = "codigo_empleado", nullable = false, unique = true)
 	private String codigoEmpleado;
-
-	private String cargo;
-	private String departamento;
 
 	@Column(name = "tipo_contrato")
 	private String tipoContrato;

@@ -13,9 +13,9 @@ public class EmpleadoDto {
 
 	private Long idEmpleado;
 	private PersonaDTO persona;
+	private CargoDto cargo;
+	private AreaDto area;
 	private String codigoEmpleado;
-	private String cargo;
-	private String departamento;
 	private String tipoContrato;
 	private String modalidadTrabajo;
 	private BigDecimal salarioBase;

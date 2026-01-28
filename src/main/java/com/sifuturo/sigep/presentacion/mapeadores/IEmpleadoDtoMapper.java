@@ -7,7 +7,14 @@ import org.mapstruct.MappingTarget;
 import com.sifuturo.sigep.dominio.entidades.Empleado;
 import com.sifuturo.sigep.presentacion.dto.EmpleadoDto;
 
-@Mapper(componentModel = "spring", uses = {IPersonaDtoMapper.class})
+@Mapper(
+    componentModel = "spring", 
+    uses = {
+        IPersonaDtoMapper.class, 
+        IAreaDtoMapper.class, 
+        ICargoDtoMapper.class
+    }
+)
 public interface IEmpleadoDtoMapper {
 
     Empleado toDomain(EmpleadoDto dto);
