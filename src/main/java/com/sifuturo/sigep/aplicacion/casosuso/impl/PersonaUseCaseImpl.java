@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sifuturo.sigep.aplicacion.casosuso.entrada.IPersonaUseCase;
+import com.sifuturo.sigep.aplicacion.casosuso.excepciones.RecursoNoEncontradoException;
 import com.sifuturo.sigep.aplicacion.casosuso.excepciones.ReglaNegocioException; // <--- Importar
+import com.sifuturo.sigep.aplicacion.util.AppUtil;
 import com.sifuturo.sigep.dominio.entidades.Persona;
 import com.sifuturo.sigep.dominio.repositorios.IPersonaRepositorio;
 
@@ -23,9 +25,7 @@ public class PersonaUseCaseImpl implements IPersonaUseCase {
 	@Override
 	@Transactional
 	public Persona crear(Persona persona) {
-		// Validación: Cédula única
 		if (repositorio.obtenerPorCedula(persona.getCedula()).isPresent()) {
-			// Lanzamos ReglaNegocioException -> El usuario verá un 400 Bad Request
 			throw new ReglaNegocioException("La persona con cédula " + persona.getCedula() + " ya está registrada.");
 		}
 		return repositorio.crear(persona);
@@ -36,26 +36,54 @@ public class PersonaUseCaseImpl implements IPersonaUseCase {
 	public Optional<Persona> obtenerPorCedula(String cedula) {
 		// Opción A: Retornar Optional (El controlador decide qué hacer)
 		return repositorio.obtenerPorCedula(cedula);
-
-		// Opción B (Si quisieras forzar el error aquí):
-		// return Optional.of(repositorio.obtenerPorCedula(cedula)
-		// .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada
-		// con cédula: " + cedula)));
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<Persona> listar() {
-		return repositorio.listar();
+	public List<Persona> listarTodos() {
+		return repositorio.listarTodos();
+
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Persona> listarActivos() {
+		return repositorio.listarActivos();
+
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<Persona> buscarPorId(Long id) {
+        return repositorio.buscarPorId(id);
+
+	}
+
+	@Override
+	public boolean existePorCedula(String cedula) {
+        return repositorio.existePorCedula(cedula);
+
 	}
 
 	@Override
 	@Transactional
-	public void eliminar(int id) {
-		// Verificar si existe antes de eliminar
-		// Nota: Necesitarías un método en el repo para buscar por ID o existsById
-		// Si no existe -> throw new RecursoNoEncontradoException("ID no existe");
+	public Persona actualizar(Long id, Persona persona) {
+		Persona personaDb = repositorio.buscarPorId(id)
+				.orElseThrow(() -> new RecursoNoEncontradoException("Empleado no encontrado"));
 
-		repositorio.eliminar(id);
+		AppUtil.copiarPropiedadesNoNulas(persona, personaDb);
+		
+		return repositorio.crear(personaDb);
+	}
+	
+	
+	@Override
+	@Transactional
+	public void eliminar(Long id) {
+		Persona persona = repositorio.buscarPorId(id)
+				.orElseThrow(() -> new RuntimeException("Persona no encontrada con ID: " + id));
+
+		persona.setEstado(false);
+		repositorio.crear(persona);
 	}
 }

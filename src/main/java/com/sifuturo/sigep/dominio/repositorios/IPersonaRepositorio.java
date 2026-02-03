@@ -9,9 +9,13 @@ public interface IPersonaRepositorio {
 	Persona crear(Persona persona);
 
 	Optional<Persona> obtenerPorCedula(String cedula);
-	Optional<Persona> buscarPorId(Long id);
-	List<Persona> listar();
 
-	void eliminar(int id);
-	// boolean existePorCedula(String cedula); // Opcional si quieres optimizar
+	List<Persona> listarTodos();
+
+	List<Persona> listarActivos();
+
+	Optional<Persona> buscarPorId(Long id);
+
+	boolean existePorCedula(String nombre);
+
 }

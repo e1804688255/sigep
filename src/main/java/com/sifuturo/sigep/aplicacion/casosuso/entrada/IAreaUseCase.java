@@ -1,11 +1,11 @@
-package com.sifuturo.sigep.dominio.repositorios;
-
-import com.sifuturo.sigep.dominio.entidades.Area;
+package com.sifuturo.sigep.aplicacion.casosuso.entrada;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface IAreaRepositorio {
+import com.sifuturo.sigep.dominio.entidades.Area;
+
+public interface IAreaUseCase {
 	List<Area> listarTodos();
 
 	List<Area> listarActivos();
@@ -15,4 +15,8 @@ public interface IAreaRepositorio {
 	Area guardar(Area area);
 
 	boolean existePorNombre(String nombre);
+
+	Area actualizar(Long id, Area areaEntrada);
+	
+	void eliminar(Long id);
 }

@@ -6,13 +6,16 @@ import java.util.Optional;
 import com.sifuturo.sigep.dominio.entidades.Empleado;
 
 public interface IEmpleadoRepositorio {
-	Empleado guardar(Empleado empleado);
+	List<Empleado> listarTodos();
+
+	List<Empleado> listarActivos();
 
 	Optional<Empleado> buscarPorId(Long id);
 
+	Empleado guardar(Empleado empleado);
+
 	Optional<Empleado> buscarPorCodigo(String codigo);
 
-	List<Empleado> listarTodos();
+	boolean existePorNombre(String nombre);
 
-	void eliminar(Long id);
 }

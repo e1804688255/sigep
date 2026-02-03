@@ -1,11 +1,12 @@
-package com.sifuturo.sigep.dominio.repositorios;
+package com.sifuturo.sigep.aplicacion.casosuso.entrada;
 
 import java.util.List;
 import java.util.Optional;
 
 import com.sifuturo.sigep.dominio.entidades.Rol;
 
-public interface IRolRepositorio {
+public interface IRolUseCase {
+
 	List<Rol> listarTodos();
 
 	List<Rol> listarActivos();
@@ -16,4 +17,7 @@ public interface IRolRepositorio {
 
 	boolean existePorNombre(String nombre);
 
+	Rol actualizar(Long id, Rol areaEntrada);
+	
+	void eliminar(Long id);
 }

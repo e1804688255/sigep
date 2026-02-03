@@ -2,11 +2,13 @@ package com.sifuturo.sigep.infraestructura.persistencia.jpa;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(name = "roles")
 @Data
-public class RolEntity {
+@EqualsAndHashCode(callSuper = true)
+public class RolEntity  extends AuditoriaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

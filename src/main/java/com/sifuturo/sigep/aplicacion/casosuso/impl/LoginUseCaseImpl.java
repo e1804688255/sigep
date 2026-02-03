@@ -3,22 +3,17 @@ package com.sifuturo.sigep.aplicacion.casosuso.impl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.sifuturo.sigep.aplicacion.casosuso.entrada.ILoginUseCase;
-import com.sifuturo.sigep.aplicacion.casosuso.excepciones.ReglaNegocioException;
-import com.sifuturo.sigep.dominio.entidades.Rol; 
 import com.sifuturo.sigep.dominio.entidades.Usuario;
 import com.sifuturo.sigep.dominio.repositorios.IUsuarioRepositorio;
 import com.sifuturo.sigep.presentacion.dto.LoginRequestDto;
 import com.sifuturo.sigep.presentacion.dto.LoginResponseDto;
-
-import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors; // Para usar streams
 
 @Service
 public class LoginUseCaseImpl implements ILoginUseCase {
 
     private final IUsuarioRepositorio usuarioRepositorio;
-    private final PasswordEncoder passwordEncoder; // 1. Inyectamos el encriptador
+    private final PasswordEncoder passwordEncoder;
     
 
 

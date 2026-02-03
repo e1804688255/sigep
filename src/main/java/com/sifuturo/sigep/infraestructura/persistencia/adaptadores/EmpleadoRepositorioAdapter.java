@@ -3,26 +3,22 @@ package com.sifuturo.sigep.infraestructura.persistencia.adaptadores;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Component;
-
+import org.springframework.stereotype.Repository;
 import com.sifuturo.sigep.dominio.entidades.Empleado;
 import com.sifuturo.sigep.dominio.repositorios.IEmpleadoRepositorio;
 import com.sifuturo.sigep.infraestructura.persistencia.jpa.EmpleadoEntity;
-import com.sifuturo.sigep.infraestructura.persistencia.mapeadores.IEmpleadoMapper; 
+import com.sifuturo.sigep.infraestructura.persistencia.mapeadores.IEmpleadoMapper;
 import com.sifuturo.sigep.infraestructura.repositorios.IEmpleadoJpaRepository;
+import lombok.RequiredArgsConstructor;
 
-@Component
+@Repository
+@RequiredArgsConstructor
 public class EmpleadoRepositorioAdapter implements IEmpleadoRepositorio {
 
 	private final IEmpleadoJpaRepository jpaRepository;
-	private final IEmpleadoMapper mapper; 
+	private final IEmpleadoMapper mapper;
 
-	public EmpleadoRepositorioAdapter(IEmpleadoJpaRepository jpaRepository, IEmpleadoMapper mapper) {
-		this.jpaRepository = jpaRepository;
-		this.mapper = mapper;
-	}
-
+	
 	@Override
 	public Empleado guardar(Empleado empleado) {
 		EmpleadoEntity entity = mapper.toEntity(empleado);
@@ -46,7 +42,12 @@ public class EmpleadoRepositorioAdapter implements IEmpleadoRepositorio {
 	}
 
 	@Override
-	public void eliminar(Long id) {
-		jpaRepository.deleteById(id);
+	public List<Empleado> listarActivos() {
+		return jpaRepository.findByEstadoTrue().stream().map(mapper::toDomain).collect(Collectors.toList());
+	}
+
+	@Override
+	public boolean existePorNombre(String nombre) {
+		return jpaRepository.existsByNombre(nombre);
 	}
 }

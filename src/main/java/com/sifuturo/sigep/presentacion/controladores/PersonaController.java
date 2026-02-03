@@ -4,36 +4,26 @@ import com.sifuturo.sigep.aplicacion.casosuso.entrada.IPersonaUseCase;
 import com.sifuturo.sigep.dominio.entidades.Persona;
 import com.sifuturo.sigep.presentacion.dto.PersonaDTO;
 import com.sifuturo.sigep.presentacion.mapeadores.IPersonaDtoMapper;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/personas")
-@CrossOrigin(origins = "*") // Permite peticiones desde Angular/React local
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class PersonaController {
 
 	private final IPersonaUseCase useCase;
 	private final IPersonaDtoMapper mapper;
 
-	public PersonaController(IPersonaUseCase useCase, IPersonaDtoMapper mapper) {
-		this.useCase = useCase;
-		this.mapper = mapper;
-	}
-
 	@PostMapping
 	public ResponseEntity<PersonaDTO> crear(@RequestBody PersonaDTO personaDto) {
-	    System.out.println(">>> LLEGO AL CONTROLLER: " + personaDto.toString());
-
-	    Persona personaDominio = mapper.toDomain(personaDto);
-	    
-	    System.out.println(">>> SE CONVIRTIO A DOMINIO: " + personaDominio.getCedula() + " - " + personaDominio.getNombres());
-
-	    Persona personaGuardada = useCase.crear(personaDominio);
-	    return new ResponseEntity<>(mapper.toDto(personaGuardada), HttpStatus.CREATED);
+		Persona personaDominio = mapper.toDomain(personaDto);
+		Persona personaGuardada = useCase.crear(personaDominio);
+		return new ResponseEntity<>(mapper.toDto(personaGuardada), HttpStatus.CREATED);
 	}
 
 	@GetMapping("/{cedula}")
@@ -43,14 +33,24 @@ public class PersonaController {
 	}
 
 	@GetMapping
-	public ResponseEntity<List<PersonaDTO>> listar() {
-		List<Persona> listaDominio = useCase.listar();
-		return ResponseEntity.ok(mapper.toDtoList(listaDominio));
+	public ResponseEntity<List<Persona>> listar() {
+		return ResponseEntity.ok(useCase.listarActivos());
+	}
+
+	@PutMapping("/{id}")
+	public ResponseEntity<Persona> actualizar(@PathVariable Long id, @RequestBody Persona persona) {
+		return ResponseEntity.ok(useCase.actualizar(id, persona));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<Void> eliminar(@PathVariable int id) {
+	public ResponseEntity<Void> eliminar(@PathVariable Long id) {
 		useCase.eliminar(id);
-		return ResponseEntity.noContent().build(); // Devuelve 204 No Content
+		return ResponseEntity.noContent().build();
 	}
+
+	@GetMapping("/{id}")
+	public ResponseEntity<Persona> buscarPorId(@PathVariable Long id) {
+		return useCase.buscarPorId(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+	}
+
 }
