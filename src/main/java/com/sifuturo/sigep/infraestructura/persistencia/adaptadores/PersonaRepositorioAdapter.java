@@ -48,7 +48,12 @@ public class PersonaRepositorioAdapter implements IPersonaRepositorio {
 	}
 
 	@Override
-	public boolean existePorCedula(String nombre) {
-		return jpaRepository.existePorCedula(nombre);
+	public boolean existsByCedula(String cedula) {
+		return jpaRepository.existsByCedula(cedula);
+	}
+
+	@Override
+	public boolean existePorId(Long id) {
+		return jpaRepository.existsById(id);
 	}
 }

@@ -13,5 +13,4 @@ public interface IEmpleadoJpaRepository extends JpaRepository<EmpleadoEntity, Lo
 
 	List<EmpleadoEntity> findByEstadoTrue();
 
-	boolean existsByNombre(String nombre);
 }

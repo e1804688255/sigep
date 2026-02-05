@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sifuturo.sigep.aplicacion.casosuso.entrada.IRolUseCase;
+import com.sifuturo.sigep.aplicacion.util.AppUtil;
 import com.sifuturo.sigep.dominio.entidades.Rol;
 import com.sifuturo.sigep.dominio.repositorios.IRolRepositorio;
 
@@ -27,7 +28,7 @@ public class RolUseCaseImpl implements IRolUseCase {
 	@Override
 	@Transactional(readOnly = true)
 	public List<Rol> listarTodos() {
-		return rolRepositorio.listarActivos();
+		return rolRepositorio.listarTodos();
 	}
 
 	@Override
@@ -48,16 +49,13 @@ public class RolUseCaseImpl implements IRolUseCase {
 
 	@Override
 	@Transactional
-	public Rol actualizar(Long id, Rol RolEntrada) {
-		Rol rolBD = rolRepositorio.buscarPorId(id)
-				.orElseThrow(() -> new RuntimeException("Rol no encontrada con ID: " + id));
+	public Rol actualizar(Long id, Rol rolEntrada) {
+	    Rol rolDb = rolRepositorio.buscarPorId(id)
+	            .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
 
-		// Actualizamos datos
-		rolBD.setNombre(RolEntrada.getNombre());
-		rolBD.setDescripcion(RolEntrada.getDescripcion());
+	    AppUtil.copiarPropiedadesNoNulas(rolEntrada, rolDb);
 
-
-		return rolRepositorio.guardar(rolBD);
+	    return rolRepositorio.guardar(rolDb);
 	}
 
 	@Override

@@ -48,7 +48,8 @@ public class PersonaController {
 		return ResponseEntity.noContent().build();
 	}
 
-	@GetMapping("/{id}")
+	@GetMapping("id/{id}")
+	
 	public ResponseEntity<Persona> buscarPorId(@PathVariable Long id) {
 		return useCase.buscarPorId(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}

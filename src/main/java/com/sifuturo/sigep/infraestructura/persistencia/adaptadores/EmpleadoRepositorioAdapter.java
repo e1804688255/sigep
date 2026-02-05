@@ -46,8 +46,5 @@ public class EmpleadoRepositorioAdapter implements IEmpleadoRepositorio {
 		return jpaRepository.findByEstadoTrue().stream().map(mapper::toDomain).collect(Collectors.toList());
 	}
 
-	@Override
-	public boolean existePorNombre(String nombre) {
-		return jpaRepository.existsByNombre(nombre);
-	}
+	
 }

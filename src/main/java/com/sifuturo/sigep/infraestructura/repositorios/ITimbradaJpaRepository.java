@@ -1,0 +1,21 @@
+package com.sifuturo.sigep.infraestructura.repositorios;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.sifuturo.sigep.infraestructura.persistencia.jpa.TimbradaEntity;
+
+@Repository
+public interface ITimbradaJpaRepository extends JpaRepository<TimbradaEntity, Long> {
+
+    @Query("SELECT t FROM TimbradaEntity t WHERE t.empleado.idEmpleado = :idEmpleado ORDER BY t.fechaHora DESC")
+    List<TimbradaEntity> findByEmpleadoIdOrderByFechaHoraDesc(@Param("idEmpleado") Long idEmpleado);
+
+   
+    Optional<TimbradaEntity> findTopByEmpleado_IdEmpleadoOrderByFechaHoraDesc(Long idEmpleado);
+}

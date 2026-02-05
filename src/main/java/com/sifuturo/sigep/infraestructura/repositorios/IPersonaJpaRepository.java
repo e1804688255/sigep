@@ -12,5 +12,5 @@ public interface IPersonaJpaRepository extends JpaRepository<PersonaEntity, Long
 
 	List<PersonaEntity> findByEstadoTrue();
 
-	boolean existePorCedula(String nombre);
-}
+	boolean existsByCedula(String cedula);
+	}

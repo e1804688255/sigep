@@ -25,7 +25,7 @@ public class RolController {
 
     @GetMapping
     public ResponseEntity<List<Rol>> listar() {
-        return ResponseEntity.ok(rolUseCase.listarActivos());
+        return ResponseEntity.ok(rolUseCase.listarTodos());
     }
     
     @GetMapping("/{id}")

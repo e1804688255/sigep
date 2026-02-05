@@ -16,6 +16,5 @@ public interface IEmpleadoRepositorio {
 
 	Optional<Empleado> buscarPorCodigo(String codigo);
 
-	boolean existePorNombre(String nombre);
 
 }

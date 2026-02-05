@@ -14,6 +14,7 @@ import com.sifuturo.sigep.dominio.entidades.Area;
 import com.sifuturo.sigep.dominio.entidades.Cargo;
 import com.sifuturo.sigep.dominio.entidades.Empleado;
 import com.sifuturo.sigep.dominio.entidades.Persona;
+import com.sifuturo.sigep.dominio.entidades.enums.EstadoPersona;
 import com.sifuturo.sigep.dominio.repositorios.IAreaRepositorio;
 import com.sifuturo.sigep.dominio.repositorios.ICargoRepositorio;
 import com.sifuturo.sigep.dominio.repositorios.IEmpleadoRepositorio;
@@ -45,6 +46,10 @@ public class EmpleadoUseCaseImpl implements IEmpleadoUseCase {
 		Long idPersona = empleado.getPersona().getId();
 		Persona personaCompleta = personaRepositorio.buscarPorId(idPersona)
 				.orElseThrow(() -> new RecursoNoEncontradoException("No existe la persona con ID: " + idPersona));
+
+		if (personaCompleta.getEstadoPersona() == EstadoPersona.EMPLEADO) {
+            throw new ReglaNegocioException("Esta persona YA es un empleado activo. No se puede contratar nuevamente.");
+        }
 		empleado.setPersona(personaCompleta);
 
 		if (empleado.getArea() == null || empleado.getArea().getId() == null) {
@@ -70,6 +75,9 @@ public class EmpleadoUseCaseImpl implements IEmpleadoUseCase {
 						"El código de empleado " + empleado.getCodigoEmpleado() + " ya existe.");
 			}
 		}
+		// 4. CAMBIO DE ESTADO: Evolucionamos a la Persona
+		personaCompleta.setEstadoPersona(EstadoPersona.EMPLEADO);
+        personaRepositorio.crear(personaCompleta); // Actualizamos la tabla personas
 
 		return empleadoRepositorio.guardar(empleado);
 	}

@@ -16,6 +16,7 @@ public interface IPersonaRepositorio {
 
 	Optional<Persona> buscarPorId(Long id);
 
-	boolean existePorCedula(String nombre);
+	boolean existsByCedula(String cedula);
+	boolean existePorId(Long id);
 
 }

@@ -1,7 +1,7 @@
 package com.sifuturo.sigep.aplicacion.casosuso.entrada;
 
 import com.sifuturo.sigep.presentacion.dto.LoginRequestDto;
-import com.sifuturo.sigep.presentacion.dto.LoginResponseDto;
+import com.sifuturo.sigep.presentacion.dto.response.LoginResponseDto;
 
 public interface ILoginUseCase {
     LoginResponseDto ingresar(LoginRequestDto loginRequest);

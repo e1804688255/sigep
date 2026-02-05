@@ -1,5 +1,6 @@
 package com.sifuturo.sigep.aplicacion.casosuso.impl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,16 +12,19 @@ import com.sifuturo.sigep.aplicacion.casosuso.excepciones.RecursoNoEncontradoExc
 import com.sifuturo.sigep.aplicacion.casosuso.excepciones.ReglaNegocioException; // <--- Importar
 import com.sifuturo.sigep.aplicacion.util.AppUtil;
 import com.sifuturo.sigep.dominio.entidades.Persona;
+import com.sifuturo.sigep.dominio.entidades.enums.EstadoPersona;
+import com.sifuturo.sigep.dominio.repositorios.ICargoRepositorio;
 import com.sifuturo.sigep.dominio.repositorios.IPersonaRepositorio;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
+
 public class PersonaUseCaseImpl implements IPersonaUseCase {
 
 	private final IPersonaRepositorio repositorio;
-
-	public PersonaUseCaseImpl(IPersonaRepositorio repositorio) {
-		this.repositorio = repositorio;
-	}
+	private final ICargoRepositorio cargoRepositorio;
 
 	@Override
 	@Transactional
@@ -28,6 +32,12 @@ public class PersonaUseCaseImpl implements IPersonaUseCase {
 		if (repositorio.obtenerPorCedula(persona.getCedula()).isPresent()) {
 			throw new ReglaNegocioException("La persona con cédula " + persona.getCedula() + " ya está registrada.");
 		}
+        if (persona.getEstadoPersona() == null) {
+            persona.setEstadoPersona(EstadoPersona.CANDIDATO);
+        }
+        if (persona.getFechaPostulacion()== null) {
+            persona.setFechaPostulacion(LocalDate.now());
+        }
 		return repositorio.crear(persona);
 	}
 
@@ -60,8 +70,8 @@ public class PersonaUseCaseImpl implements IPersonaUseCase {
 	}
 
 	@Override
-	public boolean existePorCedula(String cedula) {
-        return repositorio.existePorCedula(cedula);
+	public boolean existsByCedula(String cedula) {
+        return repositorio.existsByCedula(cedula);
 
 	}
 

@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.sifuturo.sigep.aplicacion.casosuso.entrada.ILoginUseCase;
 import com.sifuturo.sigep.presentacion.dto.LoginRequestDto;
-import com.sifuturo.sigep.presentacion.dto.LoginResponseDto;
+import com.sifuturo.sigep.presentacion.dto.response.LoginResponseDto;
 
 @RestController
 @RequestMapping("/api/auth")
