@@ -1,11 +1,16 @@
 package com.sifuturo.sigep.dominio.entidades;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@SuperBuilder // Cambia @Builder (si lo tenías) por @SuperBuilder
+@NoArgsConstructor
 public abstract class EntidadBase {
 	private LocalDateTime fechaCreacion;
 	private String usuarioCreacion;
@@ -13,8 +18,4 @@ public abstract class EntidadBase {
 	private String usuarioModificacion;
 	private Boolean estado;
 
-	public EntidadBase() {
-		this.estado = true;
-		this.fechaCreacion = LocalDateTime.now();
-	}
 }

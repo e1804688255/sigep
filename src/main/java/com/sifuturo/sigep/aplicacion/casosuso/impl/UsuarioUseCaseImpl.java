@@ -49,7 +49,7 @@ public class UsuarioUseCaseImpl implements IUsuarioUseCase { // Implementa tu in
 		nuevoUsuario.setPassword(passwordEncoder.encode(dto.getPassword())); // Encriptamos
 		nuevoUsuario.setEmpleado(empleado);
 		nuevoUsuario.setRoles(new java.util.ArrayList<>(roles));
-		nuevoUsuario.setEstado(true); // Activo
+		nuevoUsuario.setEstado(true);
 		nuevoUsuario.setFechaCreacion(LocalDateTime.now());
 
 		return usuarioRepositorio.guardar(nuevoUsuario);
@@ -124,6 +124,38 @@ public class UsuarioUseCaseImpl implements IUsuarioUseCase { // Implementa tu in
 				.orElseThrow(() -> new RuntimeException("usuario no encontrada con ID: " + id));
 
 		usuario.setEstado(false);
+		usuarioRepositorio.guardar(usuario);
+	}
+
+	@Override
+	@Transactional
+	public void resetearPassword(Long id, String nuevaClave) {
+		Usuario usuario = usuarioRepositorio.buscarPorId(id)
+				.orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
+
+		// Encriptamos la clave antes de guardar
+		usuario.setPassword(passwordEncoder.encode(nuevaClave));
+
+		// Al ser un reset, es buena práctica resetear los intentos fallidos
+		usuario.setIntentosFallidos(0);
+		usuario.setFechaBloqueo(null);
+
+		usuarioRepositorio.guardar(usuario);
+	}
+
+	@Override
+	@Transactional
+	public void cambiarEstado(Long id, boolean nuevoEstado) {
+		Usuario usuario = usuarioRepositorio.buscarPorId(id)
+				.orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
+
+		usuario.setEstado(nuevoEstado);
+
+		// Si lo bloqueamos, por seguridad también podemos resetear sus intentos
+		if (!nuevoEstado) {
+			usuario.setIntentosFallidos(0);
+		}
+
 		usuarioRepositorio.guardar(usuario);
 	}
 }

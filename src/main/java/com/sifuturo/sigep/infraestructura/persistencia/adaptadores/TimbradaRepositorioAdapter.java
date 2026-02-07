@@ -1,5 +1,6 @@
 package com.sifuturo.sigep.infraestructura.persistencia.adaptadores;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,14 @@ public class TimbradaRepositorioAdapter implements ITimbradaRepositorio {
     private final ITimbradaJpaRepository jpaRepository;
     private final ITimbradaMapper mapper; // Usamos la Interfaz, no la clase
 
+    @Override
+    public List<Timbrada> listarPorEmpleadoYRango(Long idEmpleado, LocalDateTime inicio, LocalDateTime fin) {
+        return jpaRepository.findByEmpleadoAndFecha(idEmpleado, inicio, fin)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+    
     @Override
     public Timbrada guardar(Timbrada timbrada) {
         // 1. Convertir Dominio -> Entidad usando MapStruct

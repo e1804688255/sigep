@@ -9,6 +9,7 @@ import com.sifuturo.sigep.presentacion.dto.LoginRequestDto;
 import com.sifuturo.sigep.presentacion.dto.MenuDto;
 import com.sifuturo.sigep.presentacion.dto.response.LoginResponseDto;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors; // Para usar streams
@@ -19,6 +20,9 @@ public class LoginUseCaseImpl implements ILoginUseCase {
 	private final IUsuarioRepositorio usuarioRepositorio;
 	private final PasswordEncoder passwordEncoder;
 
+	private static final int MAX_INTENTOS = 3;
+    private static final int TIEMPO_BLOQUEO_MINUTOS = 15;
+    
 	public LoginUseCaseImpl(IUsuarioRepositorio usuarioRepositorio, PasswordEncoder passwordEncoder) {
 		super();
 		this.usuarioRepositorio = usuarioRepositorio;
@@ -30,70 +34,103 @@ public class LoginUseCaseImpl implements ILoginUseCase {
 		Usuario usuario = usuarioRepositorio.buscarPorUsername(request.getUsername())
 				.orElseThrow(() -> new RuntimeException("Usuario o contraseña incorrectos")); // Mensaje genérico por
 																								// seguridad
+		// 2. VERIFICAR SI ESTÁ BLOQUEADO POR INTENTOS FALLIDOS
+        if (usuario.getFechaBloqueo() != null) {
+            if (usuario.getFechaBloqueo().isAfter(LocalDateTime.now())) {
+                throw new RuntimeException("Cuenta bloqueada temporalmente por intentos fallidos. " +
+                        "Intente nuevamente después de " + TIEMPO_BLOQUEO_MINUTOS + " minutos.");
+            } else {
+                // El tiempo ya pasó, desbloqueamos
+                usuario.setFechaBloqueo(null);
+                usuario.setIntentosFallidos(0);
+                usuarioRepositorio.guardar(usuario);
+            }
+        }
+		
+		
+     // 3. COMPARAR CONTRASEÑA
+        if (!passwordEncoder.matches(request.getPassword(), usuario.getPassword())) {
+            // -- LÓGICA DE FALLO --
+            int intentos = usuario.getIntentosFallidos() == null ? 0 : usuario.getIntentosFallidos();
+            intentos++;
+            
+            usuario.setIntentosFallidos(intentos);
 
-		// 2. COMPARAR LA CONTRASEÑA ENCRIPTADA
-		// El método matches toma (contraseñaPlana, contraseñaHashDeLaBD)
-		if (!passwordEncoder.matches(request.getPassword(), usuario.getPassword())) {
-			throw new RuntimeException("Usuario o contraseña incorrectos");
-		}
+            if (intentos >= MAX_INTENTOS) {
+                usuario.setFechaBloqueo(LocalDateTime.now().plusMinutes(TIEMPO_BLOQUEO_MINUTOS));
+                usuarioRepositorio.guardar(usuario);
+                throw new RuntimeException("Has excedido el número de intentos. Tu cuenta ha sido bloqueada por " + TIEMPO_BLOQUEO_MINUTOS + " minutos.");
+            }
 
-		// 3. Si pasa, verificar estado
-		if (!usuario.getEstado()) {
-			throw new RuntimeException("El usuario está inactivo");
-		}
+            usuarioRepositorio.guardar(usuario);
+            throw new RuntimeException("Usuario o contraseña incorrectos. Intentos restantes: " + (MAX_INTENTOS - intentos));
+        }
 
-		// 2. Obtener roles como Strings
+     // 4. VERIFICAR ESTADO (Inactivo administrativo)
+        if (!usuario.getEstado()) {
+            throw new RuntimeException("El usuario está inactivo en el sistema.");
+        }
+
+        // 5. LOGIN EXITOSO -> RESETEAR CONTADORES
+        if (usuario.getIntentosFallidos() != null && usuario.getIntentosFallidos() > 0) {
+            usuario.setIntentosFallidos(0);
+            usuario.setFechaBloqueo(null);
+            usuarioRepositorio.guardar(usuario);
+        }
+
+     // 6. GENERAR ROLES Y MENÚS (Tu lógica original)
         List<String> rolesUsuario = usuario.getRoles().stream()
                 .map(rol -> rol.getNombre())
                 .collect(Collectors.toList());
 
-        // 3. FABRICAR MENÚS SEGÚN TUS REGLAS DE NEGOCIO
         List<MenuDto> menusPersonalizados = fabricarMenus(rolesUsuario);
 
-        // 4. Armar respuesta
         LoginResponseDto response = new LoginResponseDto();
         response.setUsername(usuario.getUsername());
         response.setMensaje("Bienvenido al sistema SIGEP");
         response.setAccesoConcedido(true);
         response.setRoles(rolesUsuario);
-        response.setMenus(menusPersonalizados); // Enviamos los menús al frontend
+        response.setMenus(menusPersonalizados);
 
         if (usuario.getEmpleado() != null) {
             response.setIdEmpleado(usuario.getEmpleado().getIdEmpleado());
         }
         return response;
+    
     }
 
     /**
      * Define qué ve cada rol basado en las reglas de negocio.
      */
-    private List<MenuDto> fabricarMenus(List<String> roles) {
-        List<MenuDto> menus = new ArrayList<>();
+	private List<MenuDto> fabricarMenus(List<String> roles) {
+	    List<MenuDto> menus = new ArrayList<>();
 
-        // --- REGLA 1: TODOS LOS EMPLEADOS (Base) ---
-        // "todos puedan tener acceso al modulo de timbradas y a su ficha medica"
-        // "actualizacion de su perfil todos direcciones foto y asi"
-        menus.add(new MenuDto("Inicio", "/home", "home"));
-        menus.add(new MenuDto("Mi Perfil", "/mi-perfil", "user")); // Editar foto, dirección
-        menus.add(new MenuDto("Mis Timbradas", "/mis-timbradas", "clock"));
-        menus.add(new MenuDto("Mi Ficha Médica", "/mi-ficha-medica", "heart")); // Solo ver
+	    // 1. MENÚS COMUNES (Para todos)
+	    menus.add(new MenuDto("Inicio", "/home", "home"));
+	    menus.add(new MenuDto("Mi Perfil", "/mi-perfil", "user")); 
+	    menus.add(new MenuDto("Mis Timbradas", "/mis-timbradas", "clock"));
+	    menus.add(new MenuDto("Mis Permisos", "/mis-permisos", "file-text")); 
+	    menus.add(new MenuDto("Mi Ficha Médica", "/mi-ficha-medica", "heart")); 
 
-        // --- REGLA 2: TALENTO HUMANO (TH) ---
-        // "crear nuevos empleaos solo lso ed th"
-        // "moverlos por areas solo th" (Esto se hace en gestión de empleados)
-        // "creacion de usuario solo th"
-        if (roles.contains("ROLE_TH") || roles.contains("ROLE_ADMIN")) {
-            menus.add(new MenuDto("Gestión Empleados", "/gestion-empleados", "users")); // Crear, Editar, Mover Área
-            menus.add(new MenuDto("Gestión Usuarios", "/gestion-usuarios", "lock"));   // Crear usuarios
-            menus.add(new MenuDto("Gestión Áreas", "/gestion-areas", "building"));
-        }
+	    // 2. MENÚ PARA JEFES (NUEVO: ROLE_JEFE o ROLE_DIRECTOR)
+	    // Agregamos ROLE_JEFE para que puedan entrar a aprobar
+	    if (roles.contains("ROLE_JEFE") || roles.contains("ROLE_TH") || roles.contains("ROLE_ADMIN")) {
+	        menus.add(new MenuDto("Bandeja Solicitudes", "/gestion-solicitudes", "check-square"));
+	    }
 
-        // --- REGLA 3: DOCTOR ---
-        // "modificar ficha medica pues solo el doctor de th"
-        if (roles.contains("ROLE_DOCTOR")) {
-            menus.add(new MenuDto("Gestión Médica", "/gestion-medica", "kit-medical")); // Buscar empleado y editar su ficha
-        }
+	    // 3. MENÚS ADMINISTRATIVOS (Talento Humano y Admin solamente)
+	    if (roles.contains("ROLE_TH") || roles.contains("ROLE_ADMIN")) {
+	        menus.add(new MenuDto("Gestión Personal", "/gestion-personal", "users"));
+	        menus.add(new MenuDto("Gestión Usuarios", "/gestion-usuarios", "lock"));
+	        menus.add(new MenuDto("Gestión Áreas", "/gestion-areas", "building"));
+	        menus.add(new MenuDto("Reporte Asistencia", "/reporte-asistencia", "bar-chart"));
+	    }
 
-        return menus;
-    }
+	    // 4. MENÚS MÉDICOS
+	    if (roles.contains("ROLE_DOCTOR") || roles.contains("ROLE_ADMIN")) {
+	        menus.add(new MenuDto("Gestión Médica", "/gestion-medica", "medicine-box"));
+	    }
+
+	    return menus;
+	}
 }

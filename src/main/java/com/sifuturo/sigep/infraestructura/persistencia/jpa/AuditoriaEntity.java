@@ -37,5 +37,5 @@ public abstract class AuditoriaEntity {
 	private String usuarioModificacion;
 
 	@Column(name = "estado")
-	private Boolean estado = true;
+	private Boolean estado; // Sin el "= true"
 }

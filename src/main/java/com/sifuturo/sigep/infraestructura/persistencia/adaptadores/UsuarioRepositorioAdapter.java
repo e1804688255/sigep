@@ -9,6 +9,8 @@ import com.sifuturo.sigep.dominio.repositorios.IUsuarioRepositorio;
 import com.sifuturo.sigep.infraestructura.persistencia.jpa.UsuarioEntity;
 import com.sifuturo.sigep.infraestructura.persistencia.mapeadores.IUsuarioMapper;
 import com.sifuturo.sigep.infraestructura.repositorios.IUsuarioJpaRepository;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Repository
@@ -19,9 +21,20 @@ public class UsuarioRepositorioAdapter implements IUsuarioRepositorio {
 	private final IUsuarioMapper mapper;
 
 	@Override
+	@Transactional
 	public Usuario guardar(Usuario usuario) {
-		UsuarioEntity entity = mapper.toEntity(usuario);
-		return mapper.toDomain(jpaRepository.save(entity));
+	    UsuarioEntity entity = mapper.toEntity(usuario);
+	    
+	    // Si el ID existe, forzamos a Hibernate a que lo recupere primero o lo marque como 'dirty'
+	    if (entity.getId() != null) {
+	        UsuarioEntity existente = jpaRepository.findById(entity.getId()).orElse(null);
+	        if (existente != null) {
+	            existente.setEstado(usuario.getEstado()); // Actualizamos solo el estado
+	            return mapper.toDomain(jpaRepository.save(existente));
+	        }
+	    }
+	    
+	    return mapper.toDomain(jpaRepository.save(entity));
 	}
 
 	@Override

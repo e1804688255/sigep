@@ -21,4 +21,7 @@ public interface IUsuarioUseCase {
 
 	Usuario registrarUsuario(CrearUsuarioDto crearUsuarioDto);
 
+	void resetearPassword(Long id, String nuevaClave); 
+	
+	void cambiarEstado(Long id, boolean nuevoEstado);
 }

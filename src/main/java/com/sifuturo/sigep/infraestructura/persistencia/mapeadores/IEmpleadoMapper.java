@@ -3,14 +3,15 @@ package com.sifuturo.sigep.infraestructura.persistencia.mapeadores;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import com.sifuturo.sigep.dominio.entidades.Empleado;
 import com.sifuturo.sigep.infraestructura.persistencia.jpa.EmpleadoEntity;
 
 @Mapper(
-    componentModel = "spring", 
-    uses = {IPersonaMapper.class, IAreaMapper.class, ICargoMapper.class}
-)
+	    componentModel = "spring",
+	    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE // <--- ESTO
+	)
 public interface IEmpleadoMapper {
 
     Empleado toDomain(EmpleadoEntity entity);
