@@ -6,15 +6,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.sifuturo.sigep.aplicacion.casosuso.entrada.IAreaUseCase; // Usa la Interfaz, es mejor práctica
+import com.sifuturo.sigep.aplicacion.casosuso.entrada.IAreaUseCase;
 import com.sifuturo.sigep.dominio.entidades.Area;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/areas")
+@RequestMapping("/api/areas") // <--- OJO: La ruta es /api/areas
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+// @CrossOrigin eliminado (lo maneja SecurityConfig)
 public class AreaController {
 
     private final IAreaUseCase areaUseCase; 

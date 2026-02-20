@@ -9,27 +9,35 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class AppUtil {
-	private AppUtil() {}
+    private AppUtil() {}
 
-	/**
-	 * Copia las propiedades de origen a destino, IGNORANDO las que sean nulas. Esto
-	 * permite una actualización tipo PATCH.
-	 */
-	public static void copiarPropiedadesNoNulas(Object origen, Object destino) {
-		BeanUtils.copyProperties(origen, destino, getNullPropertyNames(origen));
-	}
+    public static void copiarPropiedadesNoNulas(Object origen, Object destino) {
+        // Obtenemos los nombres de propiedades nulas
+        String[] nullProperties = getNullPropertyNames(origen);
+        
+        // Creamos una lista de campos que JAMÁS deben ser sobrescritos
+        Set<String> ignoreFields = new HashSet<>(Set.of("id", "fechaCreacion", "usuarioCreacion"));
+        
+        // Unimos ambos arrays
+        for (String prop : nullProperties) {
+            ignoreFields.add(prop);
+        }
 
-	private static String[] getNullPropertyNames(Object source) {
-		final BeanWrapper src = new BeanWrapperImpl(source);
-		PropertyDescriptor[] pds = src.getPropertyDescriptors();
+        BeanUtils.copyProperties(origen, destino, ignoreFields.toArray(new String[0]));
+    }
 
-		Set<String> emptyNames = new HashSet<>();
-		for (PropertyDescriptor pd : pds) {
-			Object srcValue = src.getPropertyValue(pd.getName());
-			if (srcValue == null)
-				emptyNames.add(pd.getName());
-		}
-		String[] result = new String[emptyNames.size()];
-		return emptyNames.toArray(result);
-	}
+    private static String[] getNullPropertyNames(Object source) {
+        final BeanWrapper src = new BeanWrapperImpl(source);
+        PropertyDescriptor[] pds = src.getPropertyDescriptors();
+
+        Set<String> emptyNames = new HashSet<>();
+        for (PropertyDescriptor pd : pds) {
+            Object srcValue = src.getPropertyValue(pd.getName());
+            // Si el valor es nulo o es el campo "class" (de Java)
+            if (srcValue == null || pd.getName().equals("class")) {
+                emptyNames.add(pd.getName());
+            }
+        }
+        return emptyNames.toArray(new String[0]);
+    }
 }

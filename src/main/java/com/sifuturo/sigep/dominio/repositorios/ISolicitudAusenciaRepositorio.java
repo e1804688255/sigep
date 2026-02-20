@@ -2,6 +2,7 @@ package com.sifuturo.sigep.dominio.repositorios;
 
 import com.sifuturo.sigep.dominio.entidades.SolicitudAusencia;
 import java.util.Optional;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ISolicitudAusenciaRepositorio {
@@ -10,4 +11,5 @@ public interface ISolicitudAusenciaRepositorio {
     // Útil para listar las solicitudes de un empleado específico
     List<SolicitudAusencia> listarPorEmpleado(Long idEmpleado);
     List<SolicitudAusencia> listarTodas(); // <-- Agregar aquí
+    List<SolicitudAusencia> buscarAprobadasPorEmpleadoYRango(Long idEmpleado, LocalDateTime inicio, LocalDateTime fin);
     }

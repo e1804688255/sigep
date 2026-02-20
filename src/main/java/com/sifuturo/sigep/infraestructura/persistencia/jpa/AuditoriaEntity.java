@@ -11,31 +11,40 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist; // <--- IMPORTANTE
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@MappedSuperclass // Dice a JPA: "No crees tabla para esto, pero pon estos campos en las tablas
-					// hijas"
-@EntityListeners(AuditingEntityListener.class) // Activa la escucha automática
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
 public abstract class AuditoriaEntity {
-	@CreatedDate
-	@Column(name = "fecha_creacion", updatable = false)
-	private LocalDateTime fechaCreacion;
+    
+    @CreatedDate
+    @Column(name = "fecha_creacion", updatable = false)
+    private LocalDateTime fechaCreacion;
 
-	@CreatedBy
-	@Column(name = "usuario_creacion", updatable = false)
-	private String usuarioCreacion;
+    @CreatedBy
+    @Column(name = "usuario_creacion", updatable = false)
+    private String usuarioCreacion;
 
-	@LastModifiedDate
-	@Column(name = "fecha_modificacion")
-	private LocalDateTime fechaModificacion;
+    @LastModifiedDate
+    @Column(name = "fecha_modificacion")
+    private LocalDateTime fechaModificacion;
 
-	@LastModifiedBy
-	@Column(name = "usuario_modificacion")
-	private String usuarioModificacion;
+    @LastModifiedBy
+    @Column(name = "usuario_modificacion")
+    private String usuarioModificacion;
 
-	@Column(name = "estado")
-	private Boolean estado; // Sin el "= true"
+    @Column(name = "estado", nullable = false)
+    private Boolean estado = true;
+
+    // --- ESTO EVITA QUE EL ESTADO SEA NULL AL INSERTAR ---
+    @PrePersist
+    public void prePersist() {
+        if (this.estado == null) {
+            this.estado = true;
+        }
+    }
 }

@@ -58,4 +58,12 @@ public class EmpleadoController {
 		useCase.eliminar(id);
 		return ResponseEntity.noContent().build();
 	}
+	
+	@GetMapping("/buscar-por-cedula/{cedula}")
+	public ResponseEntity<EmpleadoDto> buscarPorCedula(@PathVariable String cedula) {
+	    return useCase.buscarPorCedula(cedula)
+	            .map(empleado -> ResponseEntity.ok(mapper.toDto(empleado)))
+	            .orElse(ResponseEntity.notFound().build());
+	}
+	
 }

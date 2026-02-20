@@ -105,30 +105,59 @@ public class LoginUseCaseImpl implements ILoginUseCase {
 	private List<MenuDto> fabricarMenus(List<String> roles) {
 	    List<MenuDto> menus = new ArrayList<>();
 
-	    // 1. MENÚS COMUNES (Para todos)
+	    // --- NIVEL 1: ACCESO BASE (Para TODOS) ---
 	    menus.add(new MenuDto("Inicio", "/home", "home"));
-	    menus.add(new MenuDto("Mi Perfil", "/mi-perfil", "user")); 
-	    menus.add(new MenuDto("Mis Timbradas", "/mis-timbradas", "clock"));
-	    menus.add(new MenuDto("Mis Permisos", "/mis-permisos", "file-text")); 
-	    menus.add(new MenuDto("Mi Ficha Médica", "/mi-ficha-medica", "heart")); 
-
-	    // 2. MENÚ PARA JEFES (NUEVO: ROLE_JEFE o ROLE_DIRECTOR)
-	    // Agregamos ROLE_JEFE para que puedan entrar a aprobar
+	    menus.add(new MenuDto("Mi Perfil", "/mi-perfil", "user"));
+	    menus.add(new MenuDto("Mis Timbradas", "/mis-timbradas", "clock-circle"));
+	    menus.add(new MenuDto("Mis Solicitudes", "/mis-permisos", "file-text"));
+	    
+	    // --- NIVEL 2: APROBACIONES (JEFES Y TH) ---
+	    // CORRECCIÓN AQUÍ: Agregamos || roles.contains("ROLE_TH")
+	    // Tanto el Jefe como Talento Humano necesitan entrar aquí para aprobar sus respectivas fases.
 	    if (roles.contains("ROLE_JEFE") || roles.contains("ROLE_TH") || roles.contains("ROLE_ADMIN")) {
-	        menus.add(new MenuDto("Bandeja Solicitudes", "/gestion-solicitudes", "check-square"));
+	        menus.add(new MenuDto("Gestión de Equipo", "/aprobaciones", "team", 
+	            List.of(
+	                new MenuDto("Aprobar Permisos", "/aprobaciones/permisos", "check"),
+	                new MenuDto("Aprobar Vacaciones", "/aprobaciones/vacaciones", "smile")
+	            )
+	        ));
 	    }
 
-	    // 3. MENÚS ADMINISTRATIVOS (Talento Humano y Admin solamente)
+	    // --- NIVEL 3: ÁREA TALENTO HUMANO (Gestión Administrativa) ---
+	    // CORRECCIÓN AQUÍ: Cambiamos "ROLE_RRHH" por "ROLE_TH" (que es el que tienes en BD)
 	    if (roles.contains("ROLE_TH") || roles.contains("ROLE_ADMIN")) {
-	        menus.add(new MenuDto("Gestión Personal", "/gestion-personal", "users"));
-	        menus.add(new MenuDto("Gestión Usuarios", "/gestion-usuarios", "lock"));
-	        menus.add(new MenuDto("Gestión Áreas", "/gestion-areas", "building"));
-	        menus.add(new MenuDto("Reporte Asistencia", "/reporte-asistencia", "bar-chart"));
+	        menus.add(new MenuDto("Recursos Humanos", "/rrhh", "solution",
+	            List.of(
+	                new MenuDto("Gestión Empleados", "/gestion-personal", "user-add"),
+	                new MenuDto("Control Asistencia", "/reporte-asistencia", "table")
+	               // new MenuDto("Gestión Contratos", "/contratos", "file-done")
+	            )
+	        ));
 	    }
 
-	    // 4. MENÚS MÉDICOS
-	    if (roles.contains("ROLE_DOCTOR") || roles.contains("ROLE_ADMIN")) {
-	        menus.add(new MenuDto("Gestión Médica", "/gestion-medica", "medicine-box"));
+	    // --- NIVEL 4: ÁREA MÉDICA ---
+	    if (roles.contains("ROLE_MEDICO") || roles.contains("ROLE_ADMIN")) {
+	        menus.add(new MenuDto("Dispensario Médico", "/medicina", "medicine-box",
+	            List.of(
+	                new MenuDto("Fichas Médicas", "/gestion-medica/fichas", "file-protect")
+	               // new MenuDto("Atención Pacientes", "/gestion-medica/atencion", "heart"),
+	                //new MenuDto("Certificados", "/gestion-medica/certificados", "safety-certificate")
+	            )
+	        ));
+	    }
+	    
+	    // Acceso a ver ficha médica propia (para todos)
+	    menus.add(new MenuDto("Mi Salud", "/mi-ficha-medica", "heart")); 
+
+	    // --- NIVEL 5: ADMINISTRADOR DE SISTEMA ---
+	    if (roles.contains("ROLE_ADMIN")) {
+	        menus.add(new MenuDto("Administración", "/admin", "setting",
+	            List.of(
+	                new MenuDto("Usuarios y Accesos", "/gestion-usuarios", "lock"),
+	                new MenuDto("Auditoría", "/auditoria", "eye"),
+	                new MenuDto("Configuración Global", "/configuracion", "tool")
+	            )
+	        ));
 	    }
 
 	    return menus;

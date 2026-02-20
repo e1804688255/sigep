@@ -13,4 +13,7 @@ public interface IEmpleadoJpaRepository extends JpaRepository<EmpleadoEntity, Lo
 
 	List<EmpleadoEntity> findByEstadoTrue();
 
+	Optional<EmpleadoEntity> findFirstByOrderByIdEmpleadoDesc();
+
+	Optional<EmpleadoEntity> findByPersonaCedula(String cedula);
 }

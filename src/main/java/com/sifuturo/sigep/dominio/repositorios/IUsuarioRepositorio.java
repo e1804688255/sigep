@@ -17,4 +17,6 @@ public interface IUsuarioRepositorio {
 	boolean existePorUsername(String usuario);
 
 	Optional<Usuario>  buscarPorUsername(String usuario);
+	
+	
 }

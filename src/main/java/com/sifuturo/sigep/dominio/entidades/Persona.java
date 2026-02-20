@@ -5,22 +5,14 @@ import java.time.LocalDate;
 
 import com.sifuturo.sigep.dominio.entidades.enums.EstadoPersona;
 import com.sifuturo.sigep.infraestructura.persistencia.jpa.CargoEntity;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -38,4 +30,6 @@ public class Persona extends EntidadBase {
     private String hojaVidaBase64;
     private LocalDate fechaPostulacion; 
     private CargoEntity cargoPostulacion;
+    private String observacionRechazo;
+    private String fotoPerfilBase64;
 }

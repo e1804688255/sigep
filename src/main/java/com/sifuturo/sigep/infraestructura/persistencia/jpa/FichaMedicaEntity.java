@@ -1,24 +1,37 @@
 package com.sifuturo.sigep.infraestructura.persistencia.jpa;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(name = "fichas_medicas")
 @Data
-public class FichaMedicaEntity {
+@EqualsAndHashCode(callSuper = true)
+public class FichaMedicaEntity extends AuditoriaEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String tipoSangre;
-    private String alergias;
-    private String enfermedades;
-    private String medicacion;
-    private String contactoEmergencia;
-    private String telefonoEmergencia;
+    private LocalDateTime fechaConsulta;
+    private String motivo;
+    
+    @Column(columnDefinition = "TEXT")
+    private String diagnostico;
+    
+    @Column(columnDefinition = "TEXT")
+    private String tratamiento;
+    
+    private String doctorNombre;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_persona")
-    private PersonaEntity persona; 
+    // --- NUEVOS CAMPOS ---
+    private String presion;
+    private String temperatura;
+    private String peso;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_empleado", nullable = false) // Agregado nullable=false por seguridad
+    private EmpleadoEntity empleado;
 }

@@ -20,11 +20,24 @@ public class PersonaRepositorioAdapter implements IPersonaRepositorio {
 
 	@Override
 	public Persona crear(Persona persona) {
-		PersonaEntity entity = mapper.toEntity(persona);
+	    PersonaEntity entity;
 
-		PersonaEntity guardado = jpaRepository.save(entity);
+	    if (persona.getId() != null) {
+	        // 1. Buscamos la entidad original de la DB (Trae el estado, auditoría, etc.)
+	        entity = jpaRepository.findById(persona.getId())
+	                .orElseThrow(() -> new RuntimeException("No existe la entidad"));
+	        
+	        // 2. Usamos el método de "Update" del mapper para que SOLO cambie lo que viene en 'persona'
+	        // Esto NO toca los campos que no estén en el objeto 'persona'
+	        mapper.updateEntityFromDomain(persona, entity);
+	    } else {
+	        // Es nuevo
+	        entity = mapper.toEntity(persona);
+	    }
 
-		return mapper.toDomain(guardado);
+	    // 3. Al guardar 'entity', Hibernate mantiene lo que ya tenía (como el estado)
+	    PersonaEntity guardado = jpaRepository.save(entity);
+	    return mapper.toDomain(guardado);
 	}
 
 	@Override

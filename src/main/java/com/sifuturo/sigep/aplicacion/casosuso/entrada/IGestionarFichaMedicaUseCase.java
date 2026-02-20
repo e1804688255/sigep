@@ -1,7 +1,7 @@
 package com.sifuturo.sigep.aplicacion.casosuso.entrada;
 
-import com.sifuturo.sigep.presentacion.dto.FichaMedicaDTO;
+import com.sifuturo.sigep.presentacion.dto.RegistrarFichaDto;
 
 public interface IGestionarFichaMedicaUseCase {
-    FichaMedicaDTO guardarFicha(FichaMedicaDTO dto);
+	RegistrarFichaDto guardarFicha(RegistrarFichaDto dto);
 }

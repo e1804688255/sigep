@@ -1,10 +1,9 @@
 package com.sifuturo.sigep.infraestructura.repositorios;
 
-import java.util.Optional;
+import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
 import com.sifuturo.sigep.infraestructura.persistencia.jpa.FichaMedicaEntity;
-import org.springframework.data.jpa.repository.JpaRepository; // IMPORTANTE
 
 public interface IFichaMedicaJpaRepository extends JpaRepository<FichaMedicaEntity, Long> {
-
-    Optional<FichaMedicaEntity> findByPersonaId(Long idPersona);
+    List<FichaMedicaEntity> findByEmpleado_IdEmpleadoOrderByFechaConsultaDesc(Long idEmpleado);
 }

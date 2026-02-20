@@ -7,6 +7,9 @@ import com.sifuturo.sigep.dominio.entidades.Timbrada;
 public interface ITimbradaRepositorio {
     Timbrada guardar(Timbrada timbrada);
     List<Timbrada> listarPorEmpleado(Long idEmpleado);
-    Timbrada buscarUltimaPorEmpleado(Long idEmpleado); 
+    Timbrada buscarUltimaPorEmpleado(Long idEmpleado);
     List<Timbrada> listarPorEmpleadoYRango(Long idEmpleado, LocalDateTime inicio, LocalDateTime fin);
+    
+    // --- NUEVO ---
+    List<Timbrada> listarTodasEnRango(LocalDateTime inicio, LocalDateTime fin, Long areaId);
 }

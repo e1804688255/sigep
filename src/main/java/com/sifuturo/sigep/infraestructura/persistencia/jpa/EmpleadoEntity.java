@@ -1,14 +1,9 @@
 package com.sifuturo.sigep.infraestructura.persistencia.jpa;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
 
 @Entity
 @Table(name = "empleados")
@@ -19,47 +14,57 @@ import java.time.LocalDate;
 @EqualsAndHashCode(callSuper = true)
 public class EmpleadoEntity extends AuditoriaEntity {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id_empleado")
-	private Long idEmpleado;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_empleado")
+    private Long idEmpleado;
 
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "id_persona", referencedColumnName = "id", nullable = false, unique = true)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_persona", referencedColumnName = "id", nullable = false, unique = true)
+    private PersonaEntity persona;
 
-	private PersonaEntity persona;
+    @ManyToOne
+    @JoinColumn(name = "id_area")
+    private AreaEntity area;
 
-	// Relación Muchos Empleados -> Una Área
-	@ManyToOne
-	@JoinColumn(name = "id_area")
-	private AreaEntity area;
+    @ManyToOne
+    @JoinColumn(name = "id_cargo")
+    private CargoEntity cargo;
 
-	// Relación Muchos Empleados -> Un Cargo
-	@ManyToOne
-	@JoinColumn(name = "id_cargo")
-	private CargoEntity cargo;
+    @Column(name = "codigo_empleado", nullable = false, unique = true)
+    private String codigoEmpleado;
 
-	@Column(name = "codigo_empleado", nullable = false, unique = true)
-	private String codigoEmpleado;
+    @Column(name = "tipo_contrato")
+    private String tipoContrato;
 
-	@Column(name = "tipo_contrato")
-	private String tipoContrato;
+    @Column(name = "modalidad_trabajo")
+    private String modalidadTrabajo;
 
-	@Column(name = "modalidad_trabajo")
-	private String modalidadTrabajo;
+    @Column(name = "salario_base")
+    private BigDecimal salarioBase;
 
-	@Column(name = "salario_base")
-	private BigDecimal salarioBase;
+    private String moneda;
 
-	private String moneda;
+    @Column(name = "email_corporativo", unique = true)
+    private String emailCorporativo;
 
-	@Column(name = "email_corporativo", unique = true)
-	private String emailCorporativo;
+    @Column(name = "fecha_contratacion")
+    private LocalDate fechaContratacion;
 
-	@Column(name = "fecha_contratacion")
-	private LocalDate fechaContratacion;
+    @Column(name = "fecha_finalizacion")
+    private LocalDate fechaFinalizacion;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_jefe_inmediato")
+    private EmpleadoEntity jefeInmediato;
 
-	@Column(name = "fecha_finalizacion")
-	private LocalDate fechaFinalizacion;
+    // --- NUEVOS CAMPOS AGREGADOS ---
+    @Column(name = "banco")
+    private String banco;
 
+    @Column(name = "tipo_cuenta_bancaria")
+    private String tipoCuentaBancaria;
+
+    @Column(name = "numero_cuenta_bancaria")
+    private String numeroCuentaBancaria;
 }

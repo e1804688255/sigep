@@ -8,6 +8,7 @@ import com.sifuturo.sigep.infraestructura.repositorios.ISolicitudAusenciaJpaRepo
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,6 +19,13 @@ public class SolicitudAusenciaRepositorioAdapter implements ISolicitudAusenciaRe
 
 	private final ISolicitudAusenciaJpaRepository jpaRepository;
 	private final ISolicitudAusenciaEntityMapper mapper;
+
+	@Override
+	public List<SolicitudAusencia> buscarAprobadasPorEmpleadoYRango(Long idEmpleado, LocalDateTime inicio,
+			LocalDateTime fin) {
+		return jpaRepository.findApprovedByEmpleadoAndRange(idEmpleado, inicio, fin).stream().map(mapper::toDomain)
+				.collect(Collectors.toList());
+	}
 
 	@Override
 	public SolicitudAusencia guardar(SolicitudAusencia solicitud) {

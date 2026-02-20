@@ -2,6 +2,7 @@ package com.sifuturo.sigep.aplicacion.casosuso.impl;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,13 +44,14 @@ public class EmpleadoUseCaseImpl implements IEmpleadoUseCase {
 		if (empleado.getPersona() == null || empleado.getPersona().getId() == null) {
 			throw new ReglaNegocioException("Debe indicar el ID de la persona.");
 		}
+
 		Long idPersona = empleado.getPersona().getId();
 		Persona personaCompleta = personaRepositorio.buscarPorId(idPersona)
 				.orElseThrow(() -> new RecursoNoEncontradoException("No existe la persona con ID: " + idPersona));
 
 		if (personaCompleta.getEstadoPersona() == EstadoPersona.EMPLEADO) {
-            throw new ReglaNegocioException("Esta persona YA es un empleado activo. No se puede contratar nuevamente.");
-        }
+			throw new ReglaNegocioException("Esta persona YA es un empleado activo. No se puede contratar nuevamente.");
+		}
 		empleado.setPersona(personaCompleta);
 
 		if (empleado.getArea() == null || empleado.getArea().getId() == null) {
@@ -58,7 +60,7 @@ public class EmpleadoUseCaseImpl implements IEmpleadoUseCase {
 		Long idArea = empleado.getArea().getId();
 		Area areaCompleta = areaRepositorio.buscarPorId(idArea)
 				.orElseThrow(() -> new RecursoNoEncontradoException("No existe el Área con ID: " + idArea));
-		empleado.setArea(areaCompleta); 
+		empleado.setArea(areaCompleta);
 
 		if (empleado.getCargo() == null || empleado.getCargo().getId() == null) {
 			throw new ReglaNegocioException("Debe indicar el ID del Cargo.");
@@ -66,7 +68,7 @@ public class EmpleadoUseCaseImpl implements IEmpleadoUseCase {
 		Long idCargo = empleado.getCargo().getId();
 		Cargo cargoCompleto = cargoRepositorio.buscarPorId(idCargo)
 				.orElseThrow(() -> new RecursoNoEncontradoException("No existe el Cargo con ID: " + idCargo));
-		empleado.setCargo(cargoCompleto); 
+		empleado.setCargo(cargoCompleto);
 
 		Optional<Empleado> existente = empleadoRepositorio.buscarPorCodigo(empleado.getCodigoEmpleado());
 		if (existente.isPresent()) {
@@ -75,9 +77,41 @@ public class EmpleadoUseCaseImpl implements IEmpleadoUseCase {
 						"El código de empleado " + empleado.getCodigoEmpleado() + " ya existe.");
 			}
 		}
-		// 4. CAMBIO DE ESTADO: Evolucionamos a la Persona
+
+		String cedula = personaCompleta.getCedula();
+
+		// Obtener los 3 últimos dígitos de la cédula
+		String ultimosTresCedula = (cedula != null && cedula.length() >= 3) ? cedula.substring(cedula.length() - 3)
+				: "000";
+
+		// Obtener el siguiente número incremental (ID actual + 1)
+		Long ultimoId = empleadoRepositorio.obtenerUltimoId();
+		Long siguienteIncremental = ultimoId + 1;
+
+		// Formatear el código: SIFUTURO-123-1
+		String nuevoCodigo = String.format("SIFUTURO-%s-%d", ultimosTresCedula, siguienteIncremental);
+
+		// Asignar al objeto de dominio
+		empleado.setCodigoEmpleado(nuevoCodigo);
+
+		if (empleado.getJefeInmediato() != null && empleado.getJefeInmediato().getIdEmpleado() != null) {
+			Long idJefe = empleado.getJefeInmediato().getIdEmpleado();
+
+			// Buscamos si el jefe existe
+			Empleado jefe = empleadoRepositorio.buscarPorId(idJefe).orElseThrow(
+					() -> new RecursoNoEncontradoException("El jefe indicado con ID " + idJefe + " no existe."));
+
+			// Regla: No puedo ser mi propio jefe (solo aplica en actualización, pero por
+			// seguridad)
+			if (empleado.getIdEmpleado() != null && empleado.getIdEmpleado().equals(idJefe)) {
+				throw new ReglaNegocioException("Un empleado no puede ser su propio jefe.");
+			}
+
+			empleado.setJefeInmediato(jefe);
+		}
 		personaCompleta.setEstadoPersona(EstadoPersona.EMPLEADO);
-        personaRepositorio.crear(personaCompleta); // Actualizamos la tabla personas
+		empleado.setEstado(true);
+		personaRepositorio.crear(personaCompleta);
 
 		return empleadoRepositorio.guardar(empleado);
 	}
@@ -120,8 +154,22 @@ public class EmpleadoUseCaseImpl implements IEmpleadoUseCase {
 	@Override
 	@Transactional(readOnly = true)
 	public List<Empleado> listarActivos() {
-        return empleadoRepositorio.listarActivos();
+		return empleadoRepositorio.listarActivos();
 
+	}
+	
+	@Override
+	public List<Empleado> listarJefesPorArea(Long idArea) {
+	    return empleadoRepositorio.listarActivos().stream()
+	        .filter(e -> e.getArea() != null && e.getArea().getId().equals(idArea))
+	        .filter(e -> e.getJefeInmediato() == null) // Lógica: No tiene jefe = es jefe
+	        .collect(Collectors.toList());
+	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<Empleado> buscarPorCedula(String cedula) {
+	    return empleadoRepositorio.buscarPorCedula(cedula);
 	}
 
 }

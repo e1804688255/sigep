@@ -2,11 +2,21 @@ package com.sifuturo.sigep.dominio.entidades;
 
 import com.sifuturo.sigep.dominio.entidades.enums.EstadoSolicitud;
 import com.sifuturo.sigep.dominio.entidades.enums.TipoAusencia;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
 import java.time.LocalDateTime;
 
 @Data
-public class SolicitudAusencia {
+@SuperBuilder
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class SolicitudAusencia  extends EntidadBase{
     private Long id;
     private LocalDateTime fechaSolicitud;
     private LocalDateTime fechaInicio;

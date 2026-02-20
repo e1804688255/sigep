@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import com.sifuturo.sigep.dominio.entidades.Timbrada;
 import com.sifuturo.sigep.dominio.repositorios.ITimbradaRepositorio;
 import com.sifuturo.sigep.infraestructura.persistencia.jpa.TimbradaEntity;
-import com.sifuturo.sigep.infraestructura.persistencia.mapeadores.ITimbradaMapper; // Importa tu interfaz
+import com.sifuturo.sigep.infraestructura.persistencia.mapeadores.ITimbradaMapper;
 import com.sifuturo.sigep.infraestructura.repositorios.ITimbradaJpaRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -19,41 +19,50 @@ import lombok.RequiredArgsConstructor;
 public class TimbradaRepositorioAdapter implements ITimbradaRepositorio {
 
     private final ITimbradaJpaRepository jpaRepository;
-    private final ITimbradaMapper mapper; // Usamos la Interfaz, no la clase
+    private final ITimbradaMapper mapper;
 
     @Override
     public List<Timbrada> listarPorEmpleadoYRango(Long idEmpleado, LocalDateTime inicio, LocalDateTime fin) {
-        return jpaRepository.findByEmpleadoAndFecha(idEmpleado, inicio, fin)
+        // --- CORRECCIÓN: YA NO RETORNA NULL ---
+        return jpaRepository.findByEmpleado_IdEmpleadoAndFechaHoraBetweenOrderByFechaHoraDesc(idEmpleado, inicio, fin)
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
     
     @Override
+    public List<Timbrada> listarTodasEnRango(LocalDateTime inicio, LocalDateTime fin, Long areaId) {
+        return jpaRepository.buscarReporteGeneral(inicio, fin, areaId)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Timbrada guardar(Timbrada timbrada) {
-        // 1. Convertir Dominio -> Entidad usando MapStruct
         TimbradaEntity entity = mapper.toEntity(timbrada);
+        
+        // --- BLINDAJE EXTRA PARA EL ESTADO ---
+        // Si por alguna razón el dominio viene sin estado, lo forzamos a true aquí antes de guardar
+        if (entity.getEstado() == null) {
+            entity.setEstado(true);
+        }
 
-        // 2. Guardar en BD
         TimbradaEntity guardado = jpaRepository.save(entity);
-
-        // 3. Convertir Entidad guardada -> Dominio y retornar
         return mapper.toDomain(guardado);
     }
 
     @Override
     public List<Timbrada> listarPorEmpleado(Long idEmpleado) {
-        // Buscamos las entidades y las transformamos con Stream y MapStruct
-        return jpaRepository.findByEmpleadoIdOrderByFechaHoraDesc(idEmpleado)
+        return jpaRepository.findByEmpleado_IdEmpleadoOrderByFechaHoraDesc(idEmpleado)
                 .stream()
-                .map(mapper::toDomain) // Referencia al método del mapper
+                .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Timbrada buscarUltimaPorEmpleado(Long idEmpleado) {
-        // Usamos el método findTop del repositorio JPA
-    	return jpaRepository.findTopByEmpleado_IdEmpleadoOrderByFechaHoraDesc(idEmpleado)
+        return jpaRepository.findTopByEmpleado_IdEmpleadoOrderByFechaHoraDesc(idEmpleado)
                 .map(mapper::toDomain)
                 .orElse(null);
     }

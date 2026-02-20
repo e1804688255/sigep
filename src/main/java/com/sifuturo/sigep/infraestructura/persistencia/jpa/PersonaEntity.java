@@ -62,4 +62,9 @@ public class PersonaEntity extends AuditoriaEntity {
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "id_cargo_postulacion") // FK en la tabla personas
     private CargoEntity cargoPostulacion;
+    @Column(name = "observacion_rechazo", length = 500)
+    private String observacionRechazo;
+    @Lob 
+    @Column(name = "foto_perfil_base64", columnDefinition = "LONGTEXT") 
+    private String fotoPerfilBase64;
 }

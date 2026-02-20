@@ -18,6 +18,13 @@ public class EmpleadoRepositorioAdapter implements IEmpleadoRepositorio {
 	private final IEmpleadoJpaRepository jpaRepository;
 	private final IEmpleadoMapper mapper;
 
+	@Override
+	public Long obtenerUltimoId() {
+	    return jpaRepository.findFirstByOrderByIdEmpleadoDesc()
+	            .map(EmpleadoEntity::getIdEmpleado)
+	            .orElse(0L);
+	}
+	
 	
 	@Override
 	public Empleado guardar(Empleado empleado) {
@@ -44,6 +51,13 @@ public class EmpleadoRepositorioAdapter implements IEmpleadoRepositorio {
 	@Override
 	public List<Empleado> listarActivos() {
 		return jpaRepository.findByEstadoTrue().stream().map(mapper::toDomain).collect(Collectors.toList());
+	}
+
+
+
+	@Override
+	public Optional<Empleado> buscarPorCedula(String cedula) {
+	    return jpaRepository.findByPersonaCedula(cedula).map(mapper::toDomain);
 	}
 
 	

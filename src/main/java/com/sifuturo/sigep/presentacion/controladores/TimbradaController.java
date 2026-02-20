@@ -5,29 +5,36 @@ import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*; // Importa todo para evitar errores
 
 import com.sifuturo.sigep.aplicacion.casosuso.entrada.ITimbradaUseCase;
 import com.sifuturo.sigep.dominio.entidades.Timbrada;
 import com.sifuturo.sigep.presentacion.dto.RegistrarTimbradaDto;
+import com.sifuturo.sigep.presentacion.dto.response.ReporteAsistenciaConsolidadoDto;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/timbradas")
+// 1. La ruta base incluye "/api"
+@RequestMapping("/api/timbradas") 
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") 
+// 2. ELIMINAMOS @CrossOrigin de aquí porque ya está en SecurityConfig
 public class TimbradaController {
 
     private final ITimbradaUseCase timbradaUseCase;
-
+    
+    // 3. La ruta final queda: /api/timbradas/reporte-general
+    @GetMapping("/reporte-general")
+    public ResponseEntity<List<Timbrada>> obtenerReporteGeneral(
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin,
+        @RequestParam(required = false) Long areaId
+    ) {
+        // Asegúrate de que tu UseCase tenga este método con estos parámetros
+        List<Timbrada> reporte = timbradaUseCase.listarReporteGeneral(inicio, fin, areaId);
+        return ResponseEntity.ok(reporte);
+    }
+    
     @PostMapping
     public ResponseEntity<Timbrada> registrarTimbrada(@RequestBody RegistrarTimbradaDto dto) {
         Timbrada nuevaTimbrada = timbradaUseCase.registrar(dto);
@@ -40,10 +47,18 @@ public class TimbradaController {
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin
     ) {
-        // Si inicio y fin son nulos, el UseCase debería traer el historial general
+        // Asumiendo que este método existe en tu UseCase
         List<Timbrada> historial = timbradaUseCase.listarMisTimbradasConFiltro(idEmpleado, inicio, fin);
         return ResponseEntity.ok(historial);
     }
     
-    
+    @GetMapping("/reporte-calculado")
+    public ResponseEntity<List<ReporteAsistenciaConsolidadoDto>> obtenerReporteCalculado(
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin,
+        @RequestParam(required = false) Long areaId
+    ) {
+        List<ReporteAsistenciaConsolidadoDto> reporte = timbradaUseCase.generarReporteCalculado(inicio, fin, areaId);
+        return ResponseEntity.ok(reporte);
+    }
 }

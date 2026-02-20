@@ -17,4 +17,10 @@ public interface IEmpleadoUseCase {
 	Empleado actualizar(Long id, Empleado empleado);
 
 	void eliminar(Long id);
+	
+	List<Empleado> listarJefesPorArea(Long idArea);
+	
+	Optional<Empleado> buscarPorCedula(String cedula);
+
+	
 }

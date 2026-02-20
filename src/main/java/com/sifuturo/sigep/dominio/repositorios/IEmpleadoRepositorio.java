@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.sifuturo.sigep.dominio.entidades.Empleado;
+import com.sifuturo.sigep.infraestructura.persistencia.jpa.EmpleadoEntity;
 
 public interface IEmpleadoRepositorio {
 	List<Empleado> listarTodos();
@@ -16,5 +17,7 @@ public interface IEmpleadoRepositorio {
 
 	Optional<Empleado> buscarPorCodigo(String codigo);
 
-
+	Long obtenerUltimoId();
+	
+	Optional<Empleado> buscarPorCedula(String cedula);
 }
