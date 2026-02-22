@@ -17,12 +17,14 @@ import com.sifuturo.sigep.aplicacion.casosuso.excepciones.ReglaNegocioException;
 import com.sifuturo.sigep.dominio.entidades.Empleado;
 import com.sifuturo.sigep.dominio.entidades.SolicitudAusencia;
 import com.sifuturo.sigep.dominio.entidades.Timbrada;
+import com.sifuturo.sigep.dominio.entidades.Usuario;
 import com.sifuturo.sigep.dominio.entidades.enums.EstadoSolicitud;
 import com.sifuturo.sigep.dominio.entidades.enums.TipoAusencia;
 import com.sifuturo.sigep.dominio.entidades.enums.TipoTimbrada;
 import com.sifuturo.sigep.dominio.repositorios.IEmpleadoRepositorio;
 import com.sifuturo.sigep.dominio.repositorios.ISolicitudAusenciaRepositorio; // <--- NUEVO IMPORT
 import com.sifuturo.sigep.dominio.repositorios.ITimbradaRepositorio;
+import com.sifuturo.sigep.dominio.repositorios.IUsuarioRepositorio;
 import com.sifuturo.sigep.presentacion.dto.RegistrarTimbradaDto;
 import com.sifuturo.sigep.presentacion.dto.response.ReporteAsistenciaConsolidadoDto;
 
@@ -34,7 +36,8 @@ public class TimbradaUseCaseImpl implements ITimbradaUseCase {
 
 	private final ITimbradaRepositorio timbradaRepositorio;
 	private final IEmpleadoRepositorio empleadoRepositorio;
-	private final ISolicitudAusenciaRepositorio ausenciaRepositorio; // <--- 1. INYECCIÓN DEL REPO DE AUSENCIAS
+	private final IUsuarioRepositorio usuarioRepositorio;
+	private final ISolicitudAusenciaRepositorio ausenciaRepositorio;
 
 	private static final LocalTime HORARIO_ENTRADA = LocalTime.of(8, 0);
 	private static final LocalTime HORARIO_SALIDA = LocalTime.of(16, 30);
@@ -70,12 +73,12 @@ public class TimbradaUseCaseImpl implements ITimbradaUseCase {
 		validarReglasDeNegocio(ultimaTimbrada, dto.getTipo());
 
 		Timbrada nuevaTimbrada = Timbrada.builder().empleado(empleado).fechaHora(LocalDateTime.now())
-				.tipo(dto.getTipo()).latitud(dto.getLatitud()).longitud(dto.getLongitud())
-				.observacion(dto.getObservacion()).build();
+				.tipo(dto.getTipo()).ipOrigen(dto.getIpOrigen()).observacion(dto.getObservacion()).build();
 
-		// 2. VALIDACIÓN GEOGRÁFICA (Nueva Magia)
-		validarUbicacion(nuevaTimbrada, dto.getLatitud(), dto.getLongitud());
-
+		Usuario usuario = usuarioRepositorio.listarTodos().stream()
+				.filter(u -> u.getEmpleado() != null && u.getEmpleado().getIdEmpleado().equals(dto.getIdEmpleado()))
+				.findFirst().orElse(null);
+		validarIp(usuario, dto.getIpOrigen(), nuevaTimbrada);
 		nuevaTimbrada.setEstado(true);
 		return timbradaRepositorio.guardar(nuevaTimbrada);
 	}
@@ -88,16 +91,23 @@ public class TimbradaUseCaseImpl implements ITimbradaUseCase {
 
 	private void validarReglasDeNegocio(Timbrada ultima, TipoTimbrada nuevoTipo) {
 		LocalDate hoy = LocalDate.now();
+
+		// 1. Si no hay registros previos o el último fue un día anterior
 		if (ultima == null || !ultima.getFechaHora().toLocalDate().equals(hoy)) {
 			if (nuevoTipo != TipoTimbrada.ENTRADA) {
 				throw new ReglaNegocioException("El primer registro del día debe ser una ENTRADA.");
 			}
-			return;
+			return; // Si es ENTRADA y es un nuevo día, todo está correcto, salimos.
 		}
+
+		// 2. Si llegamos aquí, significa que SÍ hay registros el día de HOY.
 		TipoTimbrada ultimoTipo = ultima.getTipo();
+
 		if (nuevoTipo == TipoTimbrada.ENTRADA) {
 			throw new ReglaNegocioException("Ya registraste tu ENTRADA el día de hoy.");
 		}
+
+		// Validamos la secuencia basada en el último registro de HOY
 		switch (ultimoTipo) {
 		case ENTRADA:
 			if (nuevoTipo != TipoTimbrada.ALMUERZO_INICIO && nuevoTipo != TipoTimbrada.SALIDA) {
@@ -115,6 +125,7 @@ public class TimbradaUseCaseImpl implements ITimbradaUseCase {
 			}
 			break;
 		case SALIDA:
+			// Si el último registro de HOY fue salida, ya no puede hacer más nada hoy.
 			throw new ReglaNegocioException("Ya registraste tu SALIDA de jornada hoy. Hasta mañana.");
 		}
 	}
@@ -151,8 +162,8 @@ public class TimbradaUseCaseImpl implements ITimbradaUseCase {
 			for (LocalDate date = fechaInicio; !date.isAfter(fechaFin); date = date.plusDays(1)) {
 
 				// Omitir fines de semana si tu empresa no labora Sáb/Dom
-				if (date.getDayOfWeek().getValue() >= 6)
-					continue;
+				// if (date.getDayOfWeek().getValue() >= 6)
+				// continue;
 
 				List<Timbrada> registrosDelDia = timbradasAgrupadas.getOrDefault(emp.getIdEmpleado(), Map.of())
 						.getOrDefault(date, new ArrayList<>());
@@ -165,65 +176,66 @@ public class TimbradaUseCaseImpl implements ITimbradaUseCase {
 		reporteCompleto.sort((a, b) -> b.getFecha().compareTo(a.getFecha()));
 		return reporteCompleto;
 	}
-	
+
 	// Método auxiliar para no ensuciar el bucle principal
-	private ReporteAsistenciaConsolidadoDto procesarDiaEmpleado(Empleado empleado, LocalDate fecha, List<Timbrada> listaTimbradas, List<SolicitudAusencia> ausencias) {
-	    
-	    Timbrada entrada = listaTimbradas.stream().filter(t -> t.getTipo() == TipoTimbrada.ENTRADA).findFirst().orElse(null);
-	    Timbrada salida = listaTimbradas.stream().filter(t -> t.getTipo() == TipoTimbrada.SALIDA).reduce((f, s) -> s).orElse(null);
-	    Timbrada almInicio = listaTimbradas.stream().filter(t -> t.getTipo() == TipoTimbrada.ALMUERZO_INICIO).findFirst().orElse(null);
-	    Timbrada almFin = listaTimbradas.stream().filter(t -> t.getTipo() == TipoTimbrada.ALMUERZO_FIN).findFirst().orElse(null);
+	private ReporteAsistenciaConsolidadoDto procesarDiaEmpleado(Empleado empleado, LocalDate fecha,
+			List<Timbrada> listaTimbradas, List<SolicitudAusencia> ausencias) {
 
-	    LocalTime horaEntradaReal = (entrada != null) ? entrada.getFechaHora().toLocalTime() : null;
-	    LocalTime horaSalidaReal = (salida != null) ? salida.getFechaHora().toLocalTime() : null;
+		Timbrada entrada = listaTimbradas.stream().filter(t -> t.getTipo() == TipoTimbrada.ENTRADA).findFirst()
+				.orElse(null);
+		Timbrada salida = listaTimbradas.stream().filter(t -> t.getTipo() == TipoTimbrada.SALIDA).reduce((f, s) -> s)
+				.orElse(null);
+		Timbrada almInicio = listaTimbradas.stream().filter(t -> t.getTipo() == TipoTimbrada.ALMUERZO_INICIO)
+				.findFirst().orElse(null);
+		Timbrada almFin = listaTimbradas.stream().filter(t -> t.getTipo() == TipoTimbrada.ALMUERZO_FIN).findFirst()
+				.orElse(null);
 
-	    long minAtrasoEntrada = 0;
-	    long minExcesoAlmuerzo = 0;
-	    String tiempoExtra = "0h 0m";
+		LocalTime horaEntradaReal = (entrada != null) ? entrada.getFechaHora().toLocalTime() : null;
+		LocalTime horaSalidaReal = (salida != null) ? salida.getFechaHora().toLocalTime() : null;
 
-	    if (entrada != null && horaEntradaReal.isAfter(HORARIO_ENTRADA)) {
-	        minAtrasoEntrada = Duration.between(HORARIO_ENTRADA, horaEntradaReal).toMinutes();
-	    }
+		long minAtrasoEntrada = 0;
+		long minExcesoAlmuerzo = 0;
+		String tiempoExtra = "0h 0m";
 
-	    if (almInicio != null && almFin != null) {
-	        long duracionAlm = Duration.between(almInicio.getFechaHora(), almFin.getFechaHora()).toMinutes();
-	        if (duracionAlm > 30) minExcesoAlmuerzo = duracionAlm - 30;
-	    }
+		if (entrada != null && horaEntradaReal.isAfter(HORARIO_ENTRADA)) {
+			minAtrasoEntrada = Duration.between(HORARIO_ENTRADA, horaEntradaReal).toMinutes();
+		}
 
-	    if (salida != null && horaSalidaReal.isAfter(HORARIO_SALIDA)) {
-	        Duration extra = Duration.between(HORARIO_SALIDA, horaSalidaReal);
-	        tiempoExtra = String.format("%dh %dm", extra.toHours(), extra.toMinutesPart());
-	    }
+		if (almInicio != null && almFin != null) {
+			long duracionAlm = Duration.between(almInicio.getFechaHora(), almFin.getFechaHora()).toMinutes();
+			if (duracionAlm > 30)
+				minExcesoAlmuerzo = duracionAlm - 30;
+		}
 
-	    // Lógica de Estado
-	    String estado = (entrada == null) ? "FALTA" : (minAtrasoEntrada + minExcesoAlmuerzo > 0) ? "ATRASO" : "PUNTUAL";
+		if (salida != null && horaSalidaReal.isAfter(HORARIO_SALIDA)) {
+			Duration extra = Duration.between(HORARIO_SALIDA, horaSalidaReal);
+			tiempoExtra = String.format("%dh %dm", extra.toHours(), extra.toMinutesPart());
+		}
 
-	    // Cruzar con Ausencias
-	    SolicitudAusencia ausencia = buscarAusenciaParaFecha(ausencias, empleado.getIdEmpleado(), fecha);
-	    if (ausencia != null) {
-	        if (ausencia.getTipo() == TipoAusencia.CITA_MEDICA) {
-	            estado = "JUSTIFICADO";
-	            minAtrasoEntrada = 0; minExcesoAlmuerzo = 0;
-	        } else {
-	            estado = ausencia.getTipo().name();
-	            minAtrasoEntrada = 0; minExcesoAlmuerzo = 0;
-	        }
-	    }
+		// Lógica de Estado
+		String estado = (entrada == null) ? "FALTA" : (minAtrasoEntrada + minExcesoAlmuerzo > 0) ? "ATRASO" : "PUNTUAL";
 
-	    return ReporteAsistenciaConsolidadoDto.builder()
-	            .idEmpleado(empleado.getIdEmpleado())
-	            .nombreEmpleado(empleado.getPersona().getNombres() + " " + empleado.getPersona().getApellidos())
-	            .area(empleado.getArea() != null ? empleado.getArea().getNombre() : "N/A")
-	            .fecha(fecha)
-	            .horaEntrada(horaEntradaReal)
-	            .horaSalida(horaSalidaReal)
-	            .minutosAtraso(minAtrasoEntrada + minExcesoAlmuerzo)
-	            .minutosAtrasoEntrada(minAtrasoEntrada)
-	            .minutosExcesoAlmuerzo(minExcesoAlmuerzo)
-	            .tiempoExtra(tiempoExtra)
-	            .esFalta(entrada == null && ausencia == null)
-	            .estadoAsistencia(estado)
-	            .build();
+		// Cruzar con Ausencias
+		SolicitudAusencia ausencia = buscarAusenciaParaFecha(ausencias, empleado.getIdEmpleado(), fecha);
+		if (ausencia != null) {
+			if (ausencia.getTipo() == TipoAusencia.CITA_MEDICA) {
+				estado = "JUSTIFICADO";
+				minAtrasoEntrada = 0;
+				minExcesoAlmuerzo = 0;
+			} else {
+				estado = ausencia.getTipo().name();
+				minAtrasoEntrada = 0;
+				minExcesoAlmuerzo = 0;
+			}
+		}
+
+		return ReporteAsistenciaConsolidadoDto.builder().idEmpleado(empleado.getIdEmpleado())
+				.nombreEmpleado(empleado.getPersona().getNombres() + " " + empleado.getPersona().getApellidos())
+				.area(empleado.getArea() != null ? empleado.getArea().getNombre() : "N/A").fecha(fecha)
+				.horaEntrada(horaEntradaReal).horaSalida(horaSalidaReal)
+				.minutosAtraso(minAtrasoEntrada + minExcesoAlmuerzo).minutosAtrasoEntrada(minAtrasoEntrada)
+				.minutosExcesoAlmuerzo(minExcesoAlmuerzo).tiempoExtra(tiempoExtra)
+				.esFalta(entrada == null && ausencia == null).estadoAsistencia(estado).build();
 	}
 
 	// Método auxiliar para buscar en la lista de ausencias
@@ -239,39 +251,20 @@ public class TimbradaUseCaseImpl implements ITimbradaUseCase {
 				}).findFirst().orElse(null);
 	}
 
-	private void validarUbicacion(Timbrada timbrada, Double lat, Double lon) {
-		// Coordenadas de la oficina central (Quito ejemplo)
-		double oficinaLat = -0.180653;
-		double oficinaLon = -78.467834;
-		double radioMaximoMetros = 100.0; // 100 metros a la redonda es bastante seguro
-
-		if (lat == null || lon == null) {
-			timbrada.setObservacion("ADVERTENCIA: Sin datos de GPS.");
+	private void validarIp(Usuario usuario, String ipOrigen, Timbrada timbrada) {
+		if (ipOrigen == null || ipOrigen.isEmpty()) {
+			timbrada.setObservacion("ADVERTENCIA: No se pudo detectar la IP.");
 			return;
 		}
 
-		double distancia = calcularDistancia(lat, lon, oficinaLat, oficinaLon);
-
-		if (distancia > radioMaximoMetros) {
-			String mensaje = String.format("FUERA DE RANGO: A %.2f metros de la oficina.", distancia);
-			timbrada.setObservacion(mensaje);
-			throw new ReglaNegocioException("Debes estar en la oficina para timbrar.");
+		// Si el usuario tiene una IP configurada, validamos que coincida
+		if (usuario != null && usuario.getIpPermitida() != null && !usuario.getIpPermitida().isEmpty()) {
+			if (!usuario.getIpPermitida().equals(ipOrigen)) {
+				String mensaje = String.format("Intento de timbrada desde IP no autorizada: %s", ipOrigen);
+				timbrada.setObservacion(mensaje);
+				throw new ReglaNegocioException(
+						"Estás intentando timbrar desde una red (IP) no autorizada. Conéctate a la red de la oficina.");
+			}
 		}
-	}
-
-	private double calcularDistancia(double lat1, double lon1, double lat2, double lon2) {
-		final int RADIO_TIERRA_KM = 6371; // Radio de la tierra en kilómetros
-
-		double dLat = Math.toRadians(lat2 - lat1);
-		double dLon = Math.toRadians(lon2 - lon1);
-
-		double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(Math.toRadians(lat1))
-				* Math.cos(Math.toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-		double distanciaKm = RADIO_TIERRA_KM * c;
-
-		return distanciaKm * 1000; // Convertimos a metros para que sea más fácil de validar
 	}
 }

@@ -15,12 +15,11 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class Timbrada extends EntidadBase {
 
-    private Long id;
-    private LocalDateTime fechaHora; 
-    private TipoTimbrada tipo;       
-    private Double latitud;        
-    private Double longitud;
-    private String observacion;     
-    
-    private Empleado empleado;
+	private Long id;
+	private LocalDateTime fechaHora;
+	private TipoTimbrada tipo;
+	private String ipOrigen;
+	private String observacion;
+
+	private Empleado empleado;
 }

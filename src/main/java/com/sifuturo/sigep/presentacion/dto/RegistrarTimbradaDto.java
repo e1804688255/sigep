@@ -7,7 +7,6 @@ import lombok.Data;
 public class RegistrarTimbradaDto {
     private Long idEmpleado;       
     private TipoTimbrada tipo;    
-    private Double latitud;
-    private Double longitud;
+    private String ipOrigen;
     private String observacion;
 }

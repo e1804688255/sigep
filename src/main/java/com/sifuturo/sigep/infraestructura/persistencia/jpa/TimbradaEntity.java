@@ -14,22 +14,24 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class TimbradaEntity extends AuditoriaEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(nullable = false)
-    private LocalDateTime fechaHora;
+	@Column(nullable = false)
+	private LocalDateTime fechaHora;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TipoTimbrada tipo;
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private TipoTimbrada tipo;
 
-    private Double latitud;
-    private Double longitud;
-    private String observacion;
+	@Column(name = "ip_origen", nullable = false) 
+    private String ipOrigen;
+	
+	@Column(nullable = false)
+	private String observacion;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_empleado")
-    private EmpleadoEntity empleado;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id_empleado")
+	private EmpleadoEntity empleado;
 }

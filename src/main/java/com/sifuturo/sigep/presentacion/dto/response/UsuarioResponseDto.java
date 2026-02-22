@@ -10,4 +10,6 @@ public class UsuarioResponseDto {
     private Boolean estado; // Cámbialo de 'boolean' a 'Boolean' para coincidir con el dominio
     private List<RolDto> roles;
     private EmpleadoResponseDto empleado;
+	private String ipPermitida;
+
 }

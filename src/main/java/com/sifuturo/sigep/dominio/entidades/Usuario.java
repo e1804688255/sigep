@@ -22,4 +22,5 @@ public class Usuario extends EntidadBase { // <-- EntidadBase DEBE tener el camp
     private Empleado empleado;
     private Integer intentosFallidos;
     private LocalDateTime fechaBloqueo;
+    private String ipPermitida;
 }

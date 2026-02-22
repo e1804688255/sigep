@@ -26,7 +26,7 @@ import jakarta.persistence.Table;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class UsuarioEntity extends AuditoriaEntity {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -38,20 +38,21 @@ public class UsuarioEntity extends AuditoriaEntity {
 	private String password;
 
 	// --- NUEVAS COLUMNAS ---
-    @Column(name = "intentos_fallidos")
-    private Integer intentosFallidos = 0; // Inicializar en 0
+	@Column(name = "intentos_fallidos")
+	private Integer intentosFallidos = 0; // Inicializar en 0
 
-    @Column(name = "fecha_bloqueo")
-    private LocalDateTime fechaBloqueo;
+	@Column(name = "fecha_bloqueo")
+	private LocalDateTime fechaBloqueo;
 
-    // ... (relaciones roles, empleado) ...
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "usuarios_roles",
-            joinColumns = @JoinColumn(name = "id_usuario"), inverseJoinColumns = @JoinColumn(name = "id_rol"))
-    private Set<RolEntity> roles;
+	// ... (relaciones roles, empleado) ...
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "usuarios_roles", joinColumns = @JoinColumn(name = "id_usuario"), inverseJoinColumns = @JoinColumn(name = "id_rol"))
+	private Set<RolEntity> roles;
 
-    @OneToOne
-    @JoinColumn(name = "id_empleado", referencedColumnName = "id_empleado")
-    private EmpleadoEntity empleado;
+	@OneToOne
+	@JoinColumn(name = "id_empleado", referencedColumnName = "id_empleado")
+	private EmpleadoEntity empleado;
 
+	@Column(nullable = false)
+	private String ipPermitida;
 }

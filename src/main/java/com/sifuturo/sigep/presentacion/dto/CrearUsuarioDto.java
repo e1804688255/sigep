@@ -7,5 +7,7 @@ import java.util.List;
 public class CrearUsuarioDto {
     private Long idEmpleado;
     private String password;
-    private List<Long> rolesIds; // IDs de los roles (ej: [1] para ADMIN)
+    private List<Long> rolesIds;
+	private String ipPermitida;
+
 }
